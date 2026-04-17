@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html {
+  scroll-behavior: smooth;
+<<<<<<< HEAD
+
+  #dashboard .scroll-container .asset-list {
+    scrollbar-width: none;
+    display: flex;
+    width: 100%;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    position: relative;
+    overflow-x: scroll;
+    scroll-behavior: smooth;
+    padding-top: var(--localnav-vertical-spacing);
+    padding-bottom: var(--localnav-vertical-spacing);
+}
+
+=======
+>>>>>>> 106c894 (update Fintech UI)
+ 
+}
+body {
+  font-family: 'Inter', sans-serif;
+}
