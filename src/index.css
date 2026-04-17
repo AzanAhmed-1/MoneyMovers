@@ -3,7 +3,6 @@
 @tailwind utilities;
 html {
   scroll-behavior: smooth;
-<<<<<<< HEAD
 
   #dashboard .scroll-container .asset-list {
     scrollbar-width: none;
@@ -18,8 +17,6 @@ html {
     padding-bottom: var(--localnav-vertical-spacing);
 }
 
-=======
->>>>>>> 106c894 (update Fintech UI)
  
 }
 body {
