@@ -1,7 +1,7 @@
 {
   "name": "smart-asset-advisor",
   "version": "0.1.0",
-  "homepage": "https://heartfelt-longma-1d5506.netlify.app",
+  "homepage": "https://heartfelt-longma-1d5506.netlify.app/",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
