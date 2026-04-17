@@ -33,7 +33,7 @@ export default function App() {
   /* ================= RISK ENGINE ================= */
 
   useEffect(() => {
-    //const surplus = income - expenses;
+    const surplus = income - expenses;
     const emergency = expenses * 3;
 
     let r = 0;
