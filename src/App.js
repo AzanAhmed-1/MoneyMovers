@@ -33,57 +33,32 @@ export default function App() {
   /* ================= RISK ENGINE ================= */
 
   useEffect(() => {
-    const surplus = income - expenses;
     const emergency = expenses * 3;
 
     let r = 0;
 
     if (savings < emergency) r += 40;
     if (price > savings) r += 30;
-    if (surplus < 0) r += 25;
+    if (income - expenses < 0) r += 25;
 
     setRisk(Math.min(100, r));
   }, [income, savings, expenses, price]);
 
-  /* ================= LOAN CALC ================= */
-
-  const generateLoanData = (emiValue) => {
-    const monthlyRate = interestRate / 12;
-    let balance = price;
-
-    let data = [];
-
-    for (let i = 1; i <= months; i++) {
-      const interest = balance * monthlyRate;
-      const principal = emiValue - interest;
-      balance = Math.max(0, balance - principal);
-
-      data.push({
-        month: i,
-        remaining: Math.round(balance)
-      });
-    }
-
-    return data;
-  };
-
-  /* ================= EMI ================= */
+  /* ================= EMI CALC ================= */
 
   useEffect(() => {
-  if (!price || !months) return;
+    if (!price || !months) return;
 
-  const monthlyRate = interestRate / 12;
+    const monthlyRate = interestRate / 12;
 
-  const emiCalc =
-    (price * monthlyRate * Math.pow(1 + monthlyRate, months)) /
-    (Math.pow(1 + monthlyRate, months) - 1);
+    const emiCalc =
+      (price * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+      (Math.pow(1 + monthlyRate, months) - 1);
 
-  const emiValue = Math.round(emiCalc);
+    const emiValue = Math.round(emiCalc);
+    setEmi(emiValue);
 
-  setEmi(emiValue);
-
-  // move function inside here to avoid dependency error
-  const data = (() => {
+    // loan data calculation
     let balance = price;
     let arr = [];
 
@@ -98,18 +73,13 @@ export default function App() {
       });
     }
 
-    return arr;
-  })();
+    setLoanData(arr);
 
-  setLoanData(data);
-
-}, [price, months]);
+  }, [price, months]);
 
   /* ================= ANALYZE ================= */
 
   const analyze = () => {
-    const surplus = income - expenses;
-
     if (!price) {
       setResult("⚠️ Enter asset price");
       return;
@@ -127,9 +97,7 @@ export default function App() {
       if (savings < expenses * 3) {
         setResult("⚠️ EMI possible but risky (low emergency fund)");
       } else {
-        setResult(
-          `📊 EMI plan active — monthly payment ${emi} for ${months} months`
-        );
+        setResult(`📊 EMI plan active — monthly payment ${emi} for ${months} months`);
       }
     }
   };
@@ -142,8 +110,6 @@ export default function App() {
     { name: "Expenses", value: expenses },
     { name: "Asset", value: price }
   ];
-
-  /* ================= UI ================= */
 
   return (
     <div className="bg-gradient-to-b from-[#120018] to-[#05000a] text-white min-h-screen w-full overflow-x-hidden">
@@ -162,13 +128,12 @@ export default function App() {
 
       <div className="space-y-32 pb-40">
 
-        {/* INPUTS */}
         <Reveal><Card title="Income"><Input setValue={setIncome} /></Card></Reveal>
         <Reveal><Card title="Savings"><Input setValue={setSavings} /></Card></Reveal>
         <Reveal><Card title="Expenses"><Input setValue={setExpenses} /></Card></Reveal>
         <Reveal><Card title="Asset Price"><Input setValue={setPrice} /></Card></Reveal>
 
-        {/* CASH OR EMI BUTTON */}
+        {/* PAYMENT MODE */}
         <Reveal>
           <Card title="Payment Mode">
             <div className="flex gap-4">
@@ -191,24 +156,24 @@ export default function App() {
               </button>
             </div>
 
-            {!useEMI ? (
-              <p className="mt-3 text-green-400">
-                Cash required: {price}
-              </p>
-            ) : (
+            {useEMI && (
               <>
                 <input
                   type="number"
                   value={months}
                   onChange={(e) => setMonths(Number(e.target.value))}
                   className="w-full p-3 bg-black/40 border border-purple-800 rounded-xl mt-4"
-                  placeholder="Months"
                 />
-
                 <p className="mt-3 text-purple-300">
                   EMI: {emi} / month
                 </p>
               </>
+            )}
+
+            {!useEMI && (
+              <p className="mt-3 text-green-400">
+                Cash required: {price}
+              </p>
             )}
           </Card>
         </Reveal>
@@ -241,18 +206,18 @@ export default function App() {
 
         {/* RESULT */}
         <Reveal>
-          <Card title="Broker Recommendation">
+          <Card title="Recommendation">
             <p className="text-xl text-purple-200">{result}</p>
           </Card>
         </Reveal>
 
-        {/* FINANCIAL CHART */}
+        {/* CHART */}
         <Reveal>
           <Card title="Financial Overview">
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={chartData}>
-                <XAxis dataKey="name" stroke="#aaa" />
-                <YAxis stroke="#aaa" />
+                <XAxis dataKey="name" />
+                <YAxis />
                 <Tooltip />
                 <Bar dataKey="value" fill="#a855f7" />
               </BarChart>
@@ -260,20 +225,16 @@ export default function App() {
           </Card>
         </Reveal>
 
-        {/* LOAN BALANCE CHART */}
+        {/* LOAN CHART */}
         {useEMI && (
           <Reveal>
             <Card title="Loan Payoff Timeline">
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={loanData}>
-                  <XAxis dataKey="month" stroke="#aaa" />
-                  <YAxis stroke="#aaa" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
                   <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="remaining"
-                    stroke="#22c55e"
-                  />
+                  <Line type="monotone" dataKey="remaining" stroke="#22c55e" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>
@@ -285,7 +246,7 @@ export default function App() {
   );
 }
 
-/* ================= REVEAL ================= */
+/* ================= COMPONENTS ================= */
 
 function Reveal({ children }) {
   const ref = useRef(null);
@@ -294,12 +255,8 @@ function Reveal({ children }) {
   return (
     <div ref={ref}>
       <motion.div
-        initial={{ opacity: 0, y: 80, scale: 0.95, filter: "blur(10px)" }}
-        animate={
-          inView
-            ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
-            : {}
-        }
+        initial={{ opacity: 0, y: 80 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.8 }}
       >
         {children}
@@ -307,8 +264,6 @@ function Reveal({ children }) {
     </div>
   );
 }
-
-/* ================= CARD ================= */
 
 function Card({ title, children }) {
   return (
@@ -318,8 +273,6 @@ function Card({ title, children }) {
     </div>
   );
 }
-
-/* ================= INPUT ================= */
 
 function Input({ setValue }) {
   return (
