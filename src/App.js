@@ -33,7 +33,7 @@ export default function App() {
   /* ================= RISK ENGINE ================= */
 
   useEffect(() => {
-    const surplus = income - expenses;
+    //const surplus = income - expenses;
     const emergency = expenses * 3;
 
     let r = 0;
@@ -70,19 +70,40 @@ export default function App() {
   /* ================= EMI ================= */
 
   useEffect(() => {
-    if (!price || !months) return;
+  if (!price || !months) return;
 
-    const monthlyRate = interestRate / 12;
+  const monthlyRate = interestRate / 12;
 
-    const emiCalc =
-      (price * monthlyRate * Math.pow(1 + monthlyRate, months)) /
-      (Math.pow(1 + monthlyRate, months) - 1);
+  const emiCalc =
+    (price * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+    (Math.pow(1 + monthlyRate, months) - 1);
 
-    const emiValue = Math.round(emiCalc);
+  const emiValue = Math.round(emiCalc);
 
-    setEmi(emiValue);
-    setLoanData(generateLoanData(emiValue));
-  }, [price, months]);
+  setEmi(emiValue);
+
+  // move function inside here to avoid dependency error
+  const data = (() => {
+    let balance = price;
+    let arr = [];
+
+    for (let i = 1; i <= months; i++) {
+      const interest = balance * monthlyRate;
+      const principal = emiValue - interest;
+      balance = Math.max(0, balance - principal);
+
+      arr.push({
+        month: i,
+        remaining: Math.round(balance)
+      });
+    }
+
+    return arr;
+  })();
+
+  setLoanData(data);
+
+}, [price, months]);
 
   /* ================= ANALYZE ================= */
 
