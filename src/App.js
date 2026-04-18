@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import jsPDF from "jspdf";
 import {
   ResponsiveContainer,
   BarChart,
@@ -16,7 +17,6 @@ export default function App() {
   const [savings, setSavings] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [price, setPrice] = useState(0);
-  const [assetType, setAssetType] = useState("");
 
   const [months, setMonths] = useState(12);
   const [useEMI, setUseEMI] = useState(false);
@@ -30,7 +30,7 @@ export default function App() {
 
   const interestRate = 0.105;
 
-  /* RISK ENGINE */
+  /* RISK */
   useEffect(() => {
     const surplus = income - expenses;
     const emergency = expenses * 3;
@@ -43,7 +43,7 @@ export default function App() {
     setRisk(Math.min(100, r));
   }, [income, savings, expenses, price]);
 
-  /* EMI ENGINE */
+  /* EMI */
   useEffect(() => {
     if (!price || !months) return;
 
@@ -73,7 +73,7 @@ export default function App() {
     setLoanData(data);
   }, [price, months]);
 
-  /* AI ENGINE */
+  /* AI ANALYSIS */
   const analyze = () => {
     if (!price) return setResult("Enter asset price");
 
@@ -83,16 +83,43 @@ export default function App() {
     let reasons = [];
     let decision = "";
 
-    if (savings < emergency) reasons.push("Low emergency fund (<3 months)");
-    if (price > savings) reasons.push("Asset exceeds savings capacity");
+    if (savings < emergency) reasons.push("Low emergency fund");
+    if (price > savings) reasons.push("Asset exceeds savings");
     if (surplus <= 0) reasons.push("No positive cashflow");
 
     if (risk <= 30) decision = "BUY (Safe)";
     else if (risk <= 60) decision = "WAIT (Moderate Risk)";
-    else decision = "INVEST (Build capital first)";
+    else decision = "INVEST (High Risk)";
 
     setResult(decision);
     setReasoning(reasons);
+  };
+
+  /* PDF GENERATOR */
+  const generatePDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("Smart Asset Broker AI Report", 20, 20);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+
+    doc.text(`Income: ${income}`, 20, 40);
+    doc.text(`Savings: ${savings}`, 20, 50);
+    doc.text(`Expenses: ${expenses}`, 20, 60);
+    doc.text(`Asset Price: ${price}`, 20, 70);
+    doc.text(`Risk: ${risk}/100`, 20, 90);
+    doc.text(`Decision: ${result}`, 20, 100);
+
+    doc.text("Reasoning:", 20, 120);
+
+    reasoning.forEach((r, i) => {
+      doc.text(`- ${r}`, 25, 130 + i * 10);
+    });
+
+    doc.save("smart-asset-report.pdf");
   };
 
   const chartData = [
@@ -105,71 +132,53 @@ export default function App() {
   return (
     <div className="app">
 
-      {/* HERO */}
       <Section>
         <Reveal>
-          <motion.h1
-            className="hero"
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
-          >
+          <motion.h1 className="hero">
             Smart Asset Broker AI
-
-            <motion.span
-              className="glow-sweep"
-              initial={{ x: "-120%" }}
-              animate={{ x: "120%" }}
-              transition={{
-                duration: 2.8,
-                delay: 0.8,
-                ease: "easeInOut"
-              }}
-            />
+            <motion.span className="glow-sweep" />
           </motion.h1>
-
-          <p className="sub">
-            Scroll-driven financial intelligence system
-          </p>
+          <p className="sub">Financial intelligence system</p>
         </Reveal>
       </Section>
 
-      {/* INPUT FLOW */}
-      <Section><Reveal><Card title="Asset Type"><input className="input" onChange={(e)=>setAssetType(e.target.value)} /></Card></Reveal></Section>
       <Section><Reveal><Card title="Income"><Input setValue={setIncome} /></Card></Reveal></Section>
       <Section><Reveal><Card title="Savings"><Input setValue={setSavings} /></Card></Reveal></Section>
       <Section><Reveal><Card title="Expenses"><Input setValue={setExpenses} /></Card></Reveal></Section>
       <Section><Reveal><Card title="Asset Price"><Input setValue={setPrice} /></Card></Reveal></Section>
 
-      {/* EMI */}
       <Section>
         <Reveal>
           <Card title="Payment Mode">
             <div className="row">
-              <button onClick={()=>setUseEMI(false)} className={!useEMI?"btn active":"btn"}>Cash</button>
-              <button onClick={()=>setUseEMI(true)} className={useEMI?"btn active":"btn"}>EMI</button>
+              <button onClick={() => setUseEMI(false)} className={!useEMI ? "btn active" : "btn"}>Cash</button>
+              <button onClick={() => setUseEMI(true)} className={useEMI ? "btn active" : "btn"}>EMI</button>
             </div>
 
             {useEMI && (
               <>
-                <input className="input" value={months} onChange={(e)=>setMonths(Number(e.target.value))}/>
-                <p className="emi">EMI: {emi}/month</p>
+                <input className="input" value={months} onChange={(e) => setMonths(Number(e.target.value))} />
+                <p>EMI: {emi}/month</p>
               </>
             )}
           </Card>
         </Reveal>
       </Section>
 
-      {/* ANALYZE */}
       <Section>
         <Reveal>
           <button className="main-btn" onClick={analyze}>
             Run AI Analysis
           </button>
+
+          <div style={{ marginTop: "20px" }}>
+            <button className="main-btn" onClick={generatePDF}>
+              View Analysis (PDF)
+            </button>
+          </div>
         </Reveal>
       </Section>
 
-      {/* RISK */}
       <Section>
         <Reveal>
           <Card title="Risk Score">
@@ -181,25 +190,21 @@ export default function App() {
         </Reveal>
       </Section>
 
-      {/* RESULT */}
       <Section>
         <Reveal>
           <Card title="AI Report">
-            <h2 className="result">{result}</h2>
-            <ul>
-              {reasoning.map((r,i)=>(
-                <li key={i}>✔ {r}</li>
-              ))}
-            </ul>
+            <h2>{result}</h2>
+            {reasoning.map((r, i) => (
+              <p key={i}>• {r}</p>
+            ))}
           </Card>
         </Reveal>
       </Section>
 
-      {/* CHART */}
       <Section>
         <Reveal>
           <Card title="Financial Overview">
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={chartData}>
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -211,12 +216,11 @@ export default function App() {
         </Reveal>
       </Section>
 
-      {/* EMI GRAPH */}
       {useEMI && (
         <Section>
           <Reveal>
             <Card title="EMI Curve">
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height={320}>
                 <LineChart data={loanData}>
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -233,22 +237,18 @@ export default function App() {
   );
 }
 
-/* UI COMPONENTS */
+/* COMPONENTS */
 function Section({ children }) {
   return <div className="section">{children}</div>;
 }
 
 function Reveal({ children }) {
   const ref = useRef();
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true });
 
   return (
     <div ref={ref}>
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.9 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 60 }} animate={inView ? { opacity: 1 } : {}}>
         {children}
       </motion.div>
     </div>
@@ -258,14 +258,12 @@ function Reveal({ children }) {
 function Card({ title, children }) {
   return (
     <div className="card">
-      <h2 className="title">{title}</h2>
+      <h2>{title}</h2>
       {children}
     </div>
   );
 }
 
 function Input({ setValue }) {
-  return (
-    <input className="input" onChange={(e)=>setValue(Number(e.target.value||0))}/>
-  );
+  return <input className="input" onChange={(e) => setValue(Number(e.target.value || 0))} />;
 }
