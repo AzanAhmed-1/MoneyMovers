@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html {
   scroll-behavior: smooth;
   background: #05010a;
@@ -5,16 +9,18 @@ html {
 
 body {
   margin: 0;
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", "SF Pro Display", system-ui, sans-serif;
   background: radial-gradient(circle at top, #1a0033, #05010a);
   color: white;
+  overflow-x: hidden;
 }
 
+/* layout */
 .app {
   width: 100%;
 }
 
-/* reduced spacing (fix scroll emptiness) */
+/* sections (scroll flow) */
 .section {
   height: 85vh;
   display: flex;
@@ -22,82 +28,88 @@ body {
   align-items: center;
 }
 
-/* CARD */
+/* card */
 .card {
   width: 100%;
-  max-width: 700px;
+  max-width: 720px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(168,85,247,0.3);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 20px;
+  backdrop-filter: blur(25px);
+  border-radius: 22px;
+  padding: 18px;
 }
 
-/* HERO */
+/* hero */
 .hero {
   font-size: 72px;
-  font-weight: 800;
+  font-weight: 900;
   text-align: center;
   position: relative;
-  overflow: hidden;
-
+  overflow: visible;
   background: linear-gradient(90deg,#a855f7,#22c55e,#06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
+/* glow sweep FIXED */
+.glow-sweep {
+  position: absolute;
+  top: 0;
+  left: -140%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-20deg);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+/* subtitle */
 .sub {
   text-align: center;
   color: rgba(255,255,255,0.6);
 }
 
-/* glow sweep */
-.glow-sweep {
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(120deg,transparent,rgba(255,255,255,0.35),transparent);
-  transform: skewX(-20deg);
-  filter: blur(6px);
-}
-
-/* INPUT */
+/* input */
 .input {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   border-radius: 10px;
   background: rgba(0,0,0,0.4);
   border: 1px solid #7e22ce;
   color: white;
 }
 
-/* BUTTONS */
+/* buttons */
 .main-btn {
-  padding: 18px 60px;
+  padding: 16px 50px;
   background: #7c3aed;
   border-radius: 12px;
+  transition: 0.3s;
+}
+
+.main-btn:hover {
+  transform: scale(1.05);
 }
 
 .row {
   display: flex;
-  gap: 40px;
+  gap: 25px;
 }
 
 .btn {
-  padding: 12px 40px;
+  padding: 10px 35px;
   background: #222;
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 .btn.active {
   background: #7c3aed;
 }
 
-/* RISK */
+/* risk */
 .risk {
-  font-size: 50px;
+  font-size: 48px;
   color: #f87171;
 }
 
@@ -106,14 +118,10 @@ body {
   height: 10px;
   background: #111;
   border-radius: 10px;
+  margin-top: 10px;
 }
 
 .fill {
   height: 100%;
   background: #ef4444;
-}
-
-/* CHART */
-.card canvas {
-  width: 100%;
 }
