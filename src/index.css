@@ -1,24 +1,119 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 html {
   scroll-behavior: smooth;
-
-  #dashboard .scroll-container .asset-list {
-    scrollbar-width: none;
-    display: flex;
-    width: 100%;
-    overflow-y: hidden;
-    box-sizing: border-box;
-    position: relative;
-    overflow-x: scroll;
-    scroll-behavior: smooth;
-    padding-top: var(--localnav-vertical-spacing);
-    padding-bottom: var(--localnav-vertical-spacing);
+  background: #05010a;
 }
 
- 
-}
 body {
-  font-family: 'Inter', sans-serif;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: radial-gradient(circle at top, #1a0033, #05010a);
+  color: white;
+}
+
+.app {
+  width: 100%;
+}
+
+/* reduced spacing (fix scroll emptiness) */
+.section {
+  height: 85vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CARD */
+.card {
+  width: 100%;
+  max-width: 700px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(168,85,247,0.3);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+/* HERO */
+.hero {
+  font-size: 72px;
+  font-weight: 800;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+
+  background: linear-gradient(90deg,#a855f7,#22c55e,#06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sub {
+  text-align: center;
+  color: rgba(255,255,255,0.6);
+}
+
+/* glow sweep */
+.glow-sweep {
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg,transparent,rgba(255,255,255,0.35),transparent);
+  transform: skewX(-20deg);
+  filter: blur(6px);
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid #7e22ce;
+  color: white;
+}
+
+/* BUTTONS */
+.main-btn {
+  padding: 18px 60px;
+  background: #7c3aed;
+  border-radius: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 40px;
+}
+
+.btn {
+  padding: 12px 40px;
+  background: #222;
+  border-radius: 10px;
+}
+
+.btn.active {
+  background: #7c3aed;
+}
+
+/* RISK */
+.risk {
+  font-size: 50px;
+  color: #f87171;
+}
+
+.bar {
+  width: 100%;
+  height: 10px;
+  background: #111;
+  border-radius: 10px;
+}
+
+.fill {
+  height: 100%;
+  background: #ef4444;
+}
+
+/* CHART */
+.card canvas {
+  width: 100%;
 }

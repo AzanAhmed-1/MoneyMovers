@@ -11,13 +11,12 @@ import {
   Line
 } from "recharts";
 
-/* ================= APP ================= */
-
 export default function App() {
   const [income, setIncome] = useState(0);
   const [savings, setSavings] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [price, setPrice] = useState(0);
+  const [assetType, setAssetType] = useState("");
 
   const [months, setMonths] = useState(12);
   const [useEMI, setUseEMI] = useState(false);
@@ -27,25 +26,24 @@ export default function App() {
 
   const [risk, setRisk] = useState(0);
   const [result, setResult] = useState("");
+  const [reasoning, setReasoning] = useState([]);
 
   const interestRate = 0.105;
 
-  /* ================= RISK ENGINE ================= */
-
+  /* RISK ENGINE */
   useEffect(() => {
+    const surplus = income - expenses;
     const emergency = expenses * 3;
 
     let r = 0;
-
     if (savings < emergency) r += 40;
     if (price > savings) r += 30;
-    if (income - expenses < 0) r += 25;
+    if (surplus < 0) r += 25;
 
     setRisk(Math.min(100, r));
   }, [income, savings, expenses, price]);
 
-  /* ================= EMI CALC ================= */
-
+  /* EMI ENGINE */
   useEffect(() => {
     if (!price || !months) return;
 
@@ -58,51 +56,44 @@ export default function App() {
     const emiValue = Math.round(emiCalc);
     setEmi(emiValue);
 
-    // loan data calculation
     let balance = price;
-    let arr = [];
+    let data = [];
 
     for (let i = 1; i <= months; i++) {
       const interest = balance * monthlyRate;
       const principal = emiValue - interest;
       balance = Math.max(0, balance - principal);
 
-      arr.push({
+      data.push({
         month: i,
         remaining: Math.round(balance)
       });
     }
 
-    setLoanData(arr);
-
+    setLoanData(data);
   }, [price, months]);
 
-  /* ================= ANALYZE ================= */
-
+  /* AI ENGINE */
   const analyze = () => {
-    if (!price) {
-      setResult("⚠️ Enter asset price");
-      return;
-    }
+    if (!price) return setResult("Enter asset price");
 
-    if (!useEMI) {
-      const cashLeft = savings - price;
+    const surplus = income - expenses;
+    const emergency = expenses * 3;
 
-      if (cashLeft < 0) {
-        setResult(`❌ Not affordable in cash — short by ${Math.abs(cashLeft)}`);
-      } else {
-        setResult(`💰 Cash purchase possible — remaining savings: ${cashLeft}`);
-      }
-    } else {
-      if (savings < expenses * 3) {
-        setResult("⚠️ EMI possible but risky (low emergency fund)");
-      } else {
-        setResult(`📊 EMI plan active — monthly payment ${emi} for ${months} months`);
-      }
-    }
+    let reasons = [];
+    let decision = "";
+
+    if (savings < emergency) reasons.push("Low emergency fund (<3 months)");
+    if (price > savings) reasons.push("Asset exceeds savings capacity");
+    if (surplus <= 0) reasons.push("No positive cashflow");
+
+    if (risk <= 30) decision = "BUY (Safe)";
+    else if (risk <= 60) decision = "WAIT (Moderate Risk)";
+    else decision = "INVEST (Build capital first)";
+
+    setResult(decision);
+    setReasoning(reasons);
   };
-
-  /* ================= CHART DATA ================= */
 
   const chartData = [
     { name: "Income", value: income },
@@ -112,109 +103,103 @@ export default function App() {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-[#120018] to-[#05000a] text-white min-h-screen w-full overflow-x-hidden">
+    <div className="app">
 
-      {/* HEADER */}
-      <Reveal>
-        <div className="text-center py-20">
-          <h1 className="text-5xl font-bold text-purple-300">
-            Smart Asset Broker
-          </h1>
-          <p className="text-gray-400 mt-2">
-            Cash vs EMI financial decision engine
+      {/* HERO */}
+      <Section>
+        <Reveal>
+          <motion.h1
+            className="hero"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1.6, ease: "easeOut" }}
+          >
+            Smart Asset Broker AI
+
+            <motion.span
+              className="glow-sweep"
+              initial={{ x: "-120%" }}
+              animate={{ x: "120%" }}
+              transition={{
+                duration: 2.8,
+                delay: 0.8,
+                ease: "easeInOut"
+              }}
+            />
+          </motion.h1>
+
+          <p className="sub">
+            Scroll-driven financial intelligence system
           </p>
-        </div>
-      </Reveal>
+        </Reveal>
+      </Section>
 
-      <div className="space-y-32 pb-40">
+      {/* INPUT FLOW */}
+      <Section><Reveal><Card title="Asset Type"><input className="input" onChange={(e)=>setAssetType(e.target.value)} /></Card></Reveal></Section>
+      <Section><Reveal><Card title="Income"><Input setValue={setIncome} /></Card></Reveal></Section>
+      <Section><Reveal><Card title="Savings"><Input setValue={setSavings} /></Card></Reveal></Section>
+      <Section><Reveal><Card title="Expenses"><Input setValue={setExpenses} /></Card></Reveal></Section>
+      <Section><Reveal><Card title="Asset Price"><Input setValue={setPrice} /></Card></Reveal></Section>
 
-        <Reveal><Card title="Income"><Input setValue={setIncome} /></Card></Reveal>
-        <Reveal><Card title="Savings"><Input setValue={setSavings} /></Card></Reveal>
-        <Reveal><Card title="Expenses"><Input setValue={setExpenses} /></Card></Reveal>
-        <Reveal><Card title="Asset Price"><Input setValue={setPrice} /></Card></Reveal>
-
-        {/* PAYMENT MODE */}
+      {/* EMI */}
+      <Section>
         <Reveal>
           <Card title="Payment Mode">
-            <div className="flex gap-4">
-              <button
-                onClick={() => setUseEMI(false)}
-                className={`px-4 py-2 rounded-xl ${
-                  !useEMI ? "bg-green-600" : "bg-gray-700"
-                }`}
-              >
-                Cash
-              </button>
-
-              <button
-                onClick={() => setUseEMI(true)}
-                className={`px-4 py-2 rounded-xl ${
-                  useEMI ? "bg-purple-600" : "bg-gray-700"
-                }`}
-              >
-                EMI
-              </button>
+            <div className="row">
+              <button onClick={()=>setUseEMI(false)} className={!useEMI?"btn active":"btn"}>Cash</button>
+              <button onClick={()=>setUseEMI(true)} className={useEMI?"btn active":"btn"}>EMI</button>
             </div>
 
             {useEMI && (
               <>
-                <input
-                  type="number"
-                  value={months}
-                  onChange={(e) => setMonths(Number(e.target.value))}
-                  className="w-full p-3 bg-black/40 border border-purple-800 rounded-xl mt-4"
-                />
-                <p className="mt-3 text-purple-300">
-                  EMI: {emi} / month
-                </p>
+                <input className="input" value={months} onChange={(e)=>setMonths(Number(e.target.value))}/>
+                <p className="emi">EMI: {emi}/month</p>
               </>
-            )}
-
-            {!useEMI && (
-              <p className="mt-3 text-green-400">
-                Cash required: {price}
-              </p>
             )}
           </Card>
         </Reveal>
+      </Section>
 
-        {/* ANALYZE */}
+      {/* ANALYZE */}
+      <Section>
         <Reveal>
-          <div className="text-center">
-            <button
-              onClick={analyze}
-              className="bg-purple-600 px-10 py-4 rounded-xl hover:bg-purple-500"
-            >
-              Get Broker Advice
-            </button>
-          </div>
+          <button className="main-btn" onClick={analyze}>
+            Run AI Analysis
+          </button>
         </Reveal>
+      </Section>
 
-        {/* RISK */}
+      {/* RISK */}
+      <Section>
         <Reveal>
           <Card title="Risk Score">
-            <div className="text-5xl text-red-400 font-bold">{risk}/100</div>
-
-            <div className="w-full h-3 bg-gray-800 rounded-full mt-4">
-              <motion.div
-                className="h-full bg-red-500"
-                animate={{ width: `${risk}%` }}
-              />
+            <div className="risk">{risk}/100</div>
+            <div className="bar">
+              <motion.div className="fill" animate={{ width: `${risk}%` }} />
             </div>
           </Card>
         </Reveal>
+      </Section>
 
-        {/* RESULT */}
+      {/* RESULT */}
+      <Section>
         <Reveal>
-          <Card title="Recommendation">
-            <p className="text-xl text-purple-200">{result}</p>
+          <Card title="AI Report">
+            <h2 className="result">{result}</h2>
+            <ul>
+              {reasoning.map((r,i)=>(
+                <li key={i}>✔ {r}</li>
+              ))}
+            </ul>
           </Card>
         </Reveal>
+      </Section>
 
-        {/* CHART */}
+      {/* CHART */}
+      <Section>
         <Reveal>
           <Card title="Financial Overview">
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData}>
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -224,40 +209,45 @@ export default function App() {
             </ResponsiveContainer>
           </Card>
         </Reveal>
+      </Section>
 
-        {/* LOAN CHART */}
-        {useEMI && (
+      {/* EMI GRAPH */}
+      {useEMI && (
+        <Section>
           <Reveal>
-            <Card title="Loan Payoff Timeline">
-              <ResponsiveContainer width="100%" height={250}>
+            <Card title="EMI Curve">
+              <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={loanData}>
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="remaining" stroke="#22c55e" />
+                  <Line dataKey="remaining" stroke="#22c55e" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>
           </Reveal>
-        )}
+        </Section>
+      )}
 
-      </div>
     </div>
   );
 }
 
-/* ================= COMPONENTS ================= */
+/* UI COMPONENTS */
+function Section({ children }) {
+  return <div className="section">{children}</div>;
+}
 
 function Reveal({ children }) {
-  const ref = useRef(null);
+  const ref = useRef();
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
     <div ref={ref}>
       <motion.div
-        initial={{ opacity: 0, y: 80 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.9 }}
       >
         {children}
       </motion.div>
@@ -267,8 +257,8 @@ function Reveal({ children }) {
 
 function Card({ title, children }) {
   return (
-    <div className="max-w-2xl mx-auto bg-white/5 border border-purple-500/20 backdrop-blur-xl p-6 rounded-2xl">
-      <h2 className="text-purple-300 mb-4">{title}</h2>
+    <div className="card">
+      <h2 className="title">{title}</h2>
       {children}
     </div>
   );
@@ -276,10 +266,6 @@ function Card({ title, children }) {
 
 function Input({ setValue }) {
   return (
-    <input
-      onChange={(e) => setValue(Number(e.target.value || 0))}
-      className="w-full p-3 bg-black/40 border border-purple-800 rounded-xl"
-      placeholder="Enter value"
-    />
+    <input className="input" onChange={(e)=>setValue(Number(e.target.value||0))}/>
   );
 }
